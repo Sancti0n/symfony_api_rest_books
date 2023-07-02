@@ -15,9 +15,9 @@ class AppFixtures extends Fixture
             $livre = new Book;
             $livre->setTitle('Livre ' . $i);
             $livre->setCoverText('Quatrième de couverture numéro : ' . $i);
+            $livre->setIsbn(strval(random_int(9780000000000, 9790000000000)));
             $manager->persist($livre);
         }
-
         $manager->flush();
     }
 }

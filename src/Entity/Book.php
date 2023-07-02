@@ -20,6 +20,9 @@ class Book
     #[ORM\Column(type: Types::TEXT, nullable: true)]
     private ?string $coverText = null;
 
+    #[ORM\Column(length: 13)]
+    private ?string $isbn = null;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -44,6 +47,18 @@ class Book
     public function setCoverText(?string $coverText): static
     {
         $this->coverText = $coverText;
+        return $this;
+    }
+
+    public function getIsbn(): ?string
+    {
+        return $this->isbn;
+    }
+
+    public function setIsbn(string $isbn): static
+    {
+        $this->isbn = $isbn;
+
         return $this;
     }
 }
