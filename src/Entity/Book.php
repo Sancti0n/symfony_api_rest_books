@@ -7,6 +7,7 @@ use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Serializer\Annotation\Groups;
 
+
 #[ORM\Entity(repositoryClass: BookRepository::class)]
 class Book
 {
@@ -29,6 +30,8 @@ class Book
     private ?string $isbn = null;
 
     #[ORM\ManyToOne(inversedBy: 'books')]
+    //#[ORM\JoinColumn(onDelete:"CASCADE")]
+    #[ORM\JoinColumn(onDelete:"SET NULL")]
     #[Groups(["getBooks", "getAuthors"])]
     private ?Author $author = null;
 
