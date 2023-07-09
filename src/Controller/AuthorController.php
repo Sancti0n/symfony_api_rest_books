@@ -63,6 +63,5 @@ class AuthorController extends AbstractController
         $em->flush();
 
         return new JsonResponse(null, JsonResponse::HTTP_NO_CONTENT);
-
     }
 }
