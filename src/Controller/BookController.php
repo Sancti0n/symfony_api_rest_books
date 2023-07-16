@@ -30,13 +30,13 @@ class BookController extends AbstractController {
     }
 
     #[Route('/api/books/{id}', name: 'detailBook', methods: ['GET'])]
-    public function getDetailBook(int $id, SerializerInterface $serializer, BookRepository $bookRepository): JsonResponse {
+    public function getDetailBook(string $id, SerializerInterface $serializer, BookRepository $bookRepository): JsonResponse {
         $book = $bookRepository->find($id);
         if ($book) {
             $jsonBook = $serializer->serialize($book, 'json', ['groups' => 'getBooks']);
             return new JsonResponse($jsonBook, Response::HTTP_OK, [], true);
         }
-        return new JsonResponse(null, Response::HTTP_NOT_FOUND);
+        return new JsonResponse($id." n'est pas dans la BDD.", Response::HTTP_NOT_FOUND);
     }
 
     #[Route('/api/books/{id}', name: 'deleteBook', methods: ['DELETE'])]

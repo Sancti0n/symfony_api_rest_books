@@ -12,10 +12,16 @@ use Symfony\Component\Serializer\Annotation\Groups;
 class Author
 {
     #[ORM\Id]
-    #[ORM\GeneratedValue]
-    #[ORM\Column]
+    #[ORM\GeneratedValue('CUSTOM')]
+    //#[ORM\GeneratedValue]
+    #[ORM\Column(type: 'uuid', unique: true)]
+    //#[ORM\Column]
+    #[ORM\CustomIdGenerator('doctrine.uuid_generator')]
+    
     #[Groups(["getBooks", "getAuthors"])]
-    private ?int $id = null;
+
+    private ?string $id = null;
+    //private ?int $id = null;
 
     #[ORM\Column(length: 255)]
     #[Groups(["getBooks", "getAuthors"])]
@@ -28,12 +34,17 @@ class Author
     #[ORM\OneToMany(mappedBy: 'author', targetEntity: Book::class)]
     private Collection $books;
 
+    #[ORM\OneToMany(mappedBy: 'Author', targetEntity: Serie::class)]
+    private Collection $series;
+
     public function __construct()
     {
         $this->books = new ArrayCollection();
+        $this->series = new ArrayCollection();
     }
 
-    public function getId(): ?int
+    public function getId(): ?string
+    //public function getId(): ?int
     {
         return $this->id;
     }
@@ -63,7 +74,8 @@ class Author
     }
 
     /**
-     * @return Collection<int, Book>
+     * //Collection<int, Book>
+     * @return Collection<string, Book>
      */
     public function getBooks(): Collection
     {
@@ -86,6 +98,37 @@ class Author
             // set the owning side to null (unless already changed)
             if ($book->getAuthor() === $this) {
                 $book->setAuthor(null);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * //Collection<int, Serie>
+     * @return Collection<string, Serie>
+     */
+    public function getSeries(): Collection
+    {
+        return $this->series;
+    }
+
+    public function addSeries(Serie $series): static
+    {
+        if (!$this->series->contains($series)) {
+            $this->series->add($series);
+            $series->setAuthor($this);
+        }
+
+        return $this;
+    }
+
+    public function removeSeries(Serie $series): static
+    {
+        if ($this->series->removeElement($series)) {
+            // set the owning side to null (unless already changed)
+            if ($series->getAuthor() === $this) {
+                $series->setAuthor(null);
             }
         }
 

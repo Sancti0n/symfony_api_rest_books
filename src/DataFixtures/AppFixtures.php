@@ -7,10 +7,8 @@ use App\Entity\Author;
 use Doctrine\Bundle\FixturesBundle\Fixture;
 use Doctrine\Persistence\ObjectManager;
 
-class AppFixtures extends Fixture
-{
-    public function load(ObjectManager $manager): void
-    {
+class AppFixtures extends Fixture {
+    public function load(ObjectManager $manager): void {
         // Création d'une vingtaine de livres ayant pour titre
         for ($i = 0; $i < 20; $i++) {
             $author = new Author();

@@ -10,13 +10,17 @@ use Symfony\Component\Validator\Constraints as Assert;
 
 
 #[ORM\Entity(repositoryClass: BookRepository::class)]
-class Book
-{
+class Book {
     #[ORM\Id]
-    #[ORM\GeneratedValue]
-    #[ORM\Column]
+    #[ORM\GeneratedValue('CUSTOM')]
+    //#[ORM\GeneratedValue]
+    #[ORM\Column(type: 'uuid', unique: true)]
+    //#[ORM\Column]
+    #[ORM\CustomIdGenerator('doctrine.uuid_generator')]
+
     #[Groups(["getBooks", "getAuthors"])]
-    private ?int $id = null;
+
+    private ?string $id = null;
 
     #[ORM\Column(length: 255)]
     #[Groups(["getBooks", "getAuthors"])]
@@ -38,7 +42,11 @@ class Book
     #[Groups(["getBooks", "getAuthors"])]
     private ?Author $author = null;
 
-    public function getId(): ?int
+    #[ORM\ManyToOne(inversedBy: 'Book')]
+    private ?Serie $serie = null;
+
+    //public function getId(): ?int
+    public function getId(): ?string
     {
         return $this->id;
     }
@@ -85,6 +93,18 @@ class Book
     public function setAuthor(?Author $author): static
     {
         $this->author = $author;
+
+        return $this;
+    }
+
+    public function getSerie(): ?Serie
+    {
+        return $this->serie;
+    }
+
+    public function setSerie(?Serie $serie): static
+    {
+        $this->serie = $serie;
 
         return $this;
     }

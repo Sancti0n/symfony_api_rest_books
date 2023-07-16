@@ -24,7 +24,7 @@ class AuthorController extends AbstractController
     }
 
     #[Route('/api/authors/{id}', name: 'detailAuthor', methods: ['GET'])]
-    public function getDetailAuthor(int $id, AuthorRepository $authorRepository, SerializerInterface $serializer): JsonResponse {
+    public function getDetailAuthor(string $id, AuthorRepository $authorRepository, SerializerInterface $serializer): JsonResponse {
         $author = $authorRepository->find($id);
         if ($author) {
             $jsonAuthor = $serializer->serialize($author, 'json', ['groups' => 'getAuthors']);
