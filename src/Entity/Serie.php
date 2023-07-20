@@ -5,8 +5,8 @@ namespace App\Entity;
 use App\Repository\SerieRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
+use Symfony\Component\Serializer\Annotation\Groups;
 use Doctrine\ORM\Mapping as ORM;
-//use Symfony\Component\Uid\Uuid;
 
 #[ORM\Entity(repositoryClass: SerieRepository::class)]
 class Serie {
@@ -17,15 +17,19 @@ class Serie {
     //#[ORM\Column]
     #[ORM\CustomIdGenerator('doctrine.uuid_generator')]
     //private ?int $id = null;
+    #[Groups(["getBooks","getAuthors", "getSeries"])]
     private ?string $id = null;
 
     #[ORM\Column(length: 255)]
+    #[Groups(["getBooks","getAuthors", "getSeries"])]
     private ?string $title = null;
 
     #[ORM\ManyToOne(inversedBy: 'series')]
+    #[Groups(["getBooks", "getSeries"])]
     private ?Author $Author = null;
 
     #[ORM\OneToMany(mappedBy: 'serie', targetEntity: Book::class)]
+    //#[Groups(["getAuthors", "getSeries"])]
     private Collection $Book;
 
     public function __construct() {

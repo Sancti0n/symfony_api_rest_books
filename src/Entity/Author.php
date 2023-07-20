@@ -13,28 +13,26 @@ class Author
 {
     #[ORM\Id]
     #[ORM\GeneratedValue('CUSTOM')]
-    //#[ORM\GeneratedValue]
     #[ORM\Column(type: 'uuid', unique: true)]
-    //#[ORM\Column]
     #[ORM\CustomIdGenerator('doctrine.uuid_generator')]
-    
-    #[Groups(["getBooks", "getAuthors"])]
-
+    #[Groups(["getBooks", "getAuthors", "getSeries"])]
     private ?string $id = null;
     //private ?int $id = null;
 
     #[ORM\Column(length: 255)]
-    #[Groups(["getBooks", "getAuthors"])]
+    #[Groups(["getBooks", "getAuthors", "getSeries"])]
     private ?string $firstName = null;
 
     #[ORM\Column(length: 255)]
-    #[Groups(["getBooks", "getAuthors"])]
+    #[Groups(["getBooks", "getAuthors", "getSeries"])]
     private ?string $lastName = null;
 
     #[ORM\OneToMany(mappedBy: 'author', targetEntity: Book::class)]
+    #[Groups(["getAuthors"])]
     private Collection $books;
 
     #[ORM\OneToMany(mappedBy: 'Author', targetEntity: Serie::class)]
+    #[Groups(["getAuthors"])]
     private Collection $series;
 
     public function __construct()
@@ -44,7 +42,6 @@ class Author
     }
 
     public function getId(): ?string
-    //public function getId(): ?int
     {
         return $this->id;
     }
