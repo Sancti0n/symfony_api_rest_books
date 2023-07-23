@@ -39,9 +39,7 @@ class AppFixtures extends Fixture {
         }
 
         for ($i = 0; $i < 20; $i++) {
-            //$faker = new Faker\Generator();
             $livre = new Book();
-            //$livre->$faker->sentence();
             $livre->setTitle($faker->sentence($nbWords = 6, $variableNbWords = true));
             //$livre->setTitle($faker->sentence());
             $livre->setCoverText('Quatrième de couverture numéro : ' . $i);
@@ -53,7 +51,11 @@ class AppFixtures extends Fixture {
             $test = $listAuthor[array_rand($listAuthor)];
             $v = array_search($test->getId(),$listSerie);
             //print($listAuthor[array_rand($listAuthor)]->getId());
-            //print_r($test);
+            print_r($test->getId());
+            echo "\n";
+            print_r($listSerie[$i]->getTitle());
+            echo "\n";
+            //print_r($listSerie->getTitle());
             /*
             echo $test->getId();
             echo "\n";
