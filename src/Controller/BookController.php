@@ -4,6 +4,7 @@ namespace App\Controller;
 
 use App\Entity\Book;
 use App\Repository\BookRepository;
+use App\Repository\SerieRepository;
 use App\Repository\AuthorRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\Request;
@@ -17,13 +18,9 @@ use Symfony\Component\Serializer\Normalizer\AbstractNormalizer;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 
 class BookController extends AbstractController {
+
     #[Route('/api/books', name: 'book',methods: ['GET'])]
     public function getBookList(BookRepository $bookRepository, SerializerInterface $serializer): JsonResponse {
-        /*
-        return $this->render('book/index.html.twig', [
-            'controller_name' => 'BookController',
-        ]);
-        */
         $bookList = $bookRepository->findAll();
         $jsonBookList = $serializer->serialize($bookList, 'json', ['groups' => 'getBooks']);
         return new JsonResponse($jsonBookList, Response::HTTP_OK, [], true);
@@ -47,15 +44,17 @@ class BookController extends AbstractController {
     }
 
     /*
-    {
-        "title": "Spider",
-        "coverText": "C'est l'histoire d'une araignée",
-        "isbn":"9783818584015",
-        "idAuthor":8
-    }
+        Exemple:
+        {
+            "title": "Test !",
+            "coverText": "Une aventure.",
+            "isbn": "9789785721142",
+            "idAuthor": "01898d66-490b-702d-90ea-8261ec2db98b",
+            "idSerie": "01898da8-bf5b-740b-af40-48fd1696ef9f"
+        }
     */
     #[Route('/api/books', name:"createBook", methods: ['POST'])]
-    public function createBook(Request $request, SerializerInterface $serializer, EntityManagerInterface $em, UrlGeneratorInterface $urlGenerator, AuthorRepository $authorRepository, ValidatorInterface $validator): JsonResponse {
+    public function createBook(Request $request, SerializerInterface $serializer, EntityManagerInterface $em, UrlGeneratorInterface $urlGenerator, AuthorRepository $authorRepository, SerieRepository $serieRepository, ValidatorInterface $validator): JsonResponse {
         $book = $serializer->deserialize($request->getContent(), Book::class, 'json');
 
         // On vérifie les erreurs
@@ -67,27 +66,36 @@ class BookController extends AbstractController {
         // Récupération de l'ensemble des données envoyées sous forme de tableau
         $content = $request->toArray();
         // Récupération de l'idAuthor. S'il n'est pas défini, alors on met -1 par défaut.
-        $idAuthor = $content['idAuthor'] ?? -1;
+        $idAuthor = $content['idAuthor'] ?? -1 || $content['idAuthor'] == "";
+        $idSerie = $content['idSerie'] ?? -1 || $content['idSerie'] == "";
         // On cherche l'auteur qui correspond et on l'assigne au livre.
         // Si "find" ne trouve pas l'auteur, alors null sera retourné.
         $book->setAuthor($authorRepository->find($idAuthor));
-
+        $book->setSerie($serieRepository->find($idSerie));
         $em->persist($book);
         $em->flush();
 
         $jsonBook = $serializer->serialize($book, 'json', ['groups' => 'getBooks']);
-        
         $location = $urlGenerator->generate('detailBook', ['id' => $book->getId()], UrlGeneratorInterface::ABSOLUTE_URL);
 
         return new JsonResponse($jsonBook, Response::HTTP_CREATED, ["Location" => $location], true);
     }
 
+    /*
+        Exemple:
+        {
+            "idAuthor": "01898d66-490c-7219-8edc-fcc1d5f4c98f",
+            "idSerie": ""
+        }
+    */
     #[Route('/api/books/{id}', name:"updateBook", methods:['PUT'])]
-    public function updateBook(Request $request, SerializerInterface $serializer, Book $currentBook, EntityManagerInterface $em, AuthorRepository $authorRepository): JsonResponse {
+    public function updateBook(Request $request, SerializerInterface $serializer, Book $currentBook, EntityManagerInterface $em, AuthorRepository $authorRepository, SerieRepository $serieRepository): JsonResponse {
         $updatedBook = $serializer->deserialize($request->getContent(), Book::class, 'json', [AbstractNormalizer::OBJECT_TO_POPULATE => $currentBook]);
         $content = $request->toArray();
-        $idAuthor = $content['idAuthor'] ?? -1;
+        $idAuthor = $content['idAuthor'] ?? -1 || $content['idAuthor'] == "";
+        $idSerie = $content['idSerie'] ?? -1 || $content['idSerie'] == "";
         $updatedBook->setAuthor($authorRepository->find($idAuthor));
+        $updatedBook->setSerie($serieRepository->find($idSerie));
         
         $em->persist($updatedBook);
         $em->flush();

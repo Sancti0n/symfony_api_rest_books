@@ -9,8 +9,7 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Symfony\Component\Serializer\Annotation\Groups;
 
 #[ORM\Entity(repositoryClass: AuthorRepository::class)]
-class Author
-{
+class Author {
     #[ORM\Id]
     #[ORM\GeneratedValue('CUSTOM')]
     #[ORM\Column(type: 'uuid', unique: true)]
@@ -35,36 +34,30 @@ class Author
     #[Groups(["getAuthors"])]
     private Collection $series;
 
-    public function __construct()
-    {
+    public function __construct() {
         $this->books = new ArrayCollection();
         $this->series = new ArrayCollection();
     }
 
-    public function getId(): ?string
-    {
+    public function getId(): ?string {
         return $this->id;
     }
 
-    public function getFirstName(): ?string
-    {
+    public function getFirstName(): ?string {
         return $this->firstName;
     }
 
-    public function setFirstName(string $firstName): static
-    {
+    public function setFirstName(string $firstName): static {
         $this->firstName = $firstName;
 
         return $this;
     }
 
-    public function getLastName(): ?string
-    {
+    public function getLastName(): ?string {
         return $this->lastName;
     }
 
-    public function setLastName(string $lastName): static
-    {
+    public function setLastName(string $lastName): static {
         $this->lastName = $lastName;
 
         return $this;
@@ -74,13 +67,11 @@ class Author
      * //Collection<int, Book>
      * @return Collection<string, Book>
      */
-    public function getBooks(): Collection
-    {
+    public function getBooks(): Collection {
         return $this->books;
     }
 
-    public function addBook(Book $book): static
-    {
+    public function addBook(Book $book): static {
         if (!$this->books->contains($book)) {
             $this->books->add($book);
             $book->setAuthor($this);
@@ -89,8 +80,7 @@ class Author
         return $this;
     }
 
-    public function removeBook(Book $book): static
-    {
+    public function removeBook(Book $book): static {
         if ($this->books->removeElement($book)) {
             // set the owning side to null (unless already changed)
             if ($book->getAuthor() === $this) {
@@ -105,13 +95,11 @@ class Author
      * //Collection<int, Serie>
      * @return Collection<string, Serie>
      */
-    public function getSeries(): Collection
-    {
+    public function getSeries(): Collection {
         return $this->series;
     }
 
-    public function addSeries(Serie $series): static
-    {
+    public function addSeries(Serie $series): static {
         if (!$this->series->contains($series)) {
             $this->series->add($series);
             $series->setAuthor($this);
@@ -120,8 +108,7 @@ class Author
         return $this;
     }
 
-    public function removeSeries(Serie $series): static
-    {
+    public function removeSeries(Serie $series): static {
         if ($this->series->removeElement($series)) {
             // set the owning side to null (unless already changed)
             if ($series->getAuthor() === $this) {
