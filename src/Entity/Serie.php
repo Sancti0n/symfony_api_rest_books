@@ -88,8 +88,3 @@ class Serie {
         return $this;
     }
 }
-
-/*
-ALTER TABLE `book` DROP FOREIGN KEY `FK_CBE5A331D94388BD`;
-ALTER TABLE `book` DROP COLUMN `serie_id`;
-*/

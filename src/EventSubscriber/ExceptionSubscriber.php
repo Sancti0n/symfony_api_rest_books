@@ -14,14 +14,14 @@ class ExceptionSubscriber implements EventSubscriberInterface {
     public function onKernelException(ExceptionEvent $event): void {
         $exception = $event->getThrowable();
         //print($exception instanceof HttpExceptionInterface);
-        dd($exception);
-        /*
+        //dd($exception);
+        
         if ($exception instanceof HttpExceptionInterface) {
             $data = [
                 'status' => $exception->getStatusCode(),
                 'message' => $exception->getMessage()
             ];
-            dd($data);
+            //dd($data);
             $event->setResponse(new JsonResponse($data));
         } else {
             $data = [
@@ -29,7 +29,7 @@ class ExceptionSubscriber implements EventSubscriberInterface {
                 'message' => $exception->getMessage()
             ];
             $event->setResponse(new JsonResponse($data));
-        }*/
+        }
     }
 
     public static function getSubscribedEvents(): array {

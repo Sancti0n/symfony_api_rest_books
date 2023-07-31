@@ -48,64 +48,53 @@ class Book {
     private ?Serie $serie = null;
 
     //public function getId(): ?int
-    public function getId(): ?string
-    {
+    public function getId(): ?string {
         return $this->id;
     }
 
-    public function getTitle(): ?string
-    {
+    public function getTitle(): ?string {
         return $this->title;
     }
 
-    public function setTitle(string $title): static
-    {
+    public function setTitle(string $title): static {
         $this->title = $title;
         return $this;
     }
 
-    public function getCoverText(): ?string
-    {
+    public function getCoverText(): ?string {
         return $this->coverText;
     }
 
-    public function setCoverText(?string $coverText): static
-    {
+    public function setCoverText(?string $coverText): static {
         $this->coverText = $coverText;
         return $this;
     }
 
-    public function getIsbn(): ?string
-    {
+    public function getIsbn(): ?string {
         return $this->isbn;
     }
 
-    public function setIsbn(string $isbn): static
-    {
+    public function setIsbn(string $isbn): static {
         $this->isbn = $isbn;
 
         return $this;
     }
 
-    public function getAuthor(): ?Author
-    {
+    public function getAuthor(): ?Author{
         return $this->author;
     }
 
-    public function setAuthor(?Author $author): static
-    {
+    public function setAuthor(?Author $author): static {
         $this->author = $author;
 
         return $this;
     }
 
-    public function getSerie(): ?Serie
-    {
+    public function getSerie(): ?Serie {
         return $this->serie;
     }
 
-    public function setSerie(?Serie $serie): static
-    {
+    public function setSerie(?Serie $serie): static {
         $this->serie = $serie;
 
         return $this;

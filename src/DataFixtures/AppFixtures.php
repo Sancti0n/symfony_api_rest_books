@@ -4,12 +4,21 @@ namespace App\DataFixtures;
 
 use Faker;
 use App\Entity\Book;
+use App\Entity\User;
 use App\Entity\Serie;
 use App\Entity\Author;
 use Doctrine\Persistence\ObjectManager;
 use Doctrine\Bundle\FixturesBundle\Fixture;
+use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 
 class AppFixtures extends Fixture {
+
+    private $userPasswordHasher;
+    
+    public function __construct(UserPasswordHasherInterface $userPasswordHasher) {
+        $this->userPasswordHasher = $userPasswordHasher;
+    }
+
     public function load(ObjectManager $manager): void {
 
         $faker = Faker\Factory::create('fr_FR');
@@ -27,8 +36,7 @@ class AppFixtures extends Fixture {
         for ($i = 0; $i < 10; $i++) {
             $serie = new Serie();
             $serie->setTitle($faker->sentence($nbWords = 6, $variableNbWords = true));
-            $v = $listAuthor[array_rand($listAuthor)];
-            $serie->setAuthor($v);
+            $serie->setAuthor($listAuthor[array_rand($listAuthor)]);
             $manager->persist($serie);
             $listSerie[] = $serie;
         }
@@ -42,15 +50,33 @@ class AppFixtures extends Fixture {
             for ($j=0;$j<count($listAuthor);$j++) {
                 $l = $listSerie[array_rand($listSerie)];
                 if ($listAuthor[$j]->getId() == $l->getAuthor()->getId()) {
-                    $s = $l;
-                    $a = $listAuthor[$j];
+                    $livre->setSerie($l);
+                    $livre->setAuthor($listAuthor[$j]);
+                    $manager->persist($livre);
                     break;
-                }   
+                }
+                if ($j+1==count($listAuthor) && $listAuthor[$j]->getId() != $l->getAuthor()->getId()) {
+                    $livre->setSerie($l);
+                    $livre->setAuthor($listAuthor[array_rand($listAuthor)]);
+                    $manager->persist($livre);
+                }
             }
-            $livre->setSerie($s);
-            $livre->setAuthor($a);
-            $manager->persist($livre);
         }
+
+        // Création d'un user "normal"
+        $user = new User();
+        $user->setEmail("user@bookapi.com");
+        $user->setRoles(["ROLE_USER"]);
+        $user->setPassword($this->userPasswordHasher->hashPassword($user, "password"));
+        $manager->persist($user);
+        
+        // Création d'un user admin
+        $userAdmin = new User();
+        $userAdmin->setEmail("admin@bookapi.com");
+        $userAdmin->setRoles(["ROLE_ADMIN"]);
+        $userAdmin->setPassword($this->userPasswordHasher->hashPassword($userAdmin, "password"));
+        $manager->persist($userAdmin);
+        
         $manager->flush();
     }
 }
