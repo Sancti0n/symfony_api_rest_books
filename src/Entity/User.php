@@ -10,6 +10,7 @@ use Symfony\Bridge\Doctrine\Types\UuidType;
 use Symfony\Component\Uid\Uuid;
 
 #[ORM\Entity(repositoryClass: UserRepository::class)]
+#[ORM\Table("`user`")]
 class User implements UserInterface, PasswordAuthenticatedUserInterface {
 
     #[ORM\Id]

@@ -7,18 +7,22 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Symfony\Component\Serializer\Annotation\Groups;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Bridge\Doctrine\Types\UuidType;
+use Symfony\Component\Uid\Uuid;
+
 
 #[ORM\Entity(repositoryClass: SerieRepository::class)]
 class Serie {
     #[ORM\Id]
     #[ORM\GeneratedValue('CUSTOM')]
     //#[ORM\GeneratedValue]
-    #[ORM\Column(type: 'uuid', unique: true)]
+    #[ORM\Column(type: UuidType::NAME, unique: true)]
+    //#[ORM\Column(type: 'uuid', unique: true)]
     //#[ORM\Column]
     #[ORM\CustomIdGenerator('doctrine.uuid_generator')]
     //private ?int $id = null;
     #[Groups(["getBooks","getAuthors", "getSeries"])]
-    private ?string $id = null;
+    private ?Uuid $id = null;
 
     #[ORM\Column(length: 255)]
     #[Groups(["getBooks","getAuthors", "getSeries"])]
@@ -36,7 +40,7 @@ class Serie {
         $this->Book = new ArrayCollection();
     }
 
-    public function getId(): ?string {
+    public function getId(): ?Uuid {
     //public function getId(): ?int {
         return $this->id;
     }

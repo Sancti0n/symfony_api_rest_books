@@ -5,17 +5,21 @@ namespace App\Entity;
 use Doctrine\ORM\Mapping as ORM;
 use App\Repository\AuthorRepository;
 use Doctrine\Common\Collections\Collection;
+use Symfony\Bridge\Doctrine\Types\UuidType;
+use Symfony\Component\Uid\Uuid;
 use Doctrine\Common\Collections\ArrayCollection;
 use Symfony\Component\Serializer\Annotation\Groups;
+
 
 #[ORM\Entity(repositoryClass: AuthorRepository::class)]
 class Author {
     #[ORM\Id]
     #[ORM\GeneratedValue('CUSTOM')]
-    #[ORM\Column(type: 'uuid', unique: true)]
+    //#[ORM\Column(type: 'uuid', unique: true)]
+    #[ORM\Column(type: UuidType::NAME, unique: true)]
     #[ORM\CustomIdGenerator('doctrine.uuid_generator')]
     #[Groups(["getBooks", "getAuthors", "getSeries"])]
-    private ?string $id = null;
+    private ?Uuid $id = null;
     //private ?int $id = null;
 
     #[ORM\Column(length: 255)]
@@ -39,7 +43,7 @@ class Author {
         $this->series = new ArrayCollection();
     }
 
-    public function getId(): ?string {
+    public function getId(): ?Uuid {
         return $this->id;
     }
 
