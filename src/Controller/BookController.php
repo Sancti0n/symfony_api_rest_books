@@ -21,13 +21,17 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 class BookController extends AbstractController {
 
     #[Route('/api/books', name: 'book',methods: ['GET'])]
-    public function getBookList(BookRepository $bookRepository, SerializerInterface $serializer): JsonResponse {
-        $bookList = $bookRepository->findAll();
+    #[IsGranted('ROLE_ADMIN', message: 'Vous n\'avez pas les droits suffisants pour consulter des livres')]
+    public function getBookList(BookRepository $bookRepository, SerializerInterface $serializer, Request $request): JsonResponse {
+        $page = $request->get('page', 1);
+        $limit = $request->get('limit', 3);
+        $bookList = $bookRepository->findAllWithPagination($page, $limit);
         $jsonBookList = $serializer->serialize($bookList, 'json', ['groups' => 'getBooks']);
         return new JsonResponse($jsonBookList, Response::HTTP_OK, [], true);
     }
 
     #[Route('/api/books/{id}', name: 'detailBook', methods: ['GET'])]
+    #[IsGranted('ROLE_ADMIN', message: 'Vous n\'avez pas les droits suffisants pour consulter un livre')]
     public function getDetailBook(string $id, SerializerInterface $serializer, BookRepository $bookRepository): JsonResponse {
         $book = $bookRepository->find($id);
         if ($book) {
@@ -38,6 +42,7 @@ class BookController extends AbstractController {
     }
 
     #[Route('/api/books/{id}', name: 'deleteBook', methods: ['DELETE'])]
+    #[IsGranted('ROLE_ADMIN', message: 'Vous n\'avez pas les droits suffisants pour supprimer un livre')]
     public function deleteBook(Book $book, EntityManagerInterface $em): JsonResponse {
         $em->remove($book);
         $em->flush();
@@ -91,6 +96,7 @@ class BookController extends AbstractController {
         }
     */
     #[Route('/api/books/{id}', name:"updateBook", methods:['PUT'])]
+    #[IsGranted('ROLE_ADMIN', message: 'Vous n\'avez pas les droits suffisants pour supprimer un livre')]
     public function updateBook(Request $request, SerializerInterface $serializer, Book $currentBook, EntityManagerInterface $em, AuthorRepository $authorRepository, SerieRepository $serieRepository): JsonResponse {
         $updatedBook = $serializer->deserialize($request->getContent(), Book::class, 'json', [AbstractNormalizer::OBJECT_TO_POPULATE => $currentBook]);
         $content = $request->toArray();

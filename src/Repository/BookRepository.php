@@ -16,13 +16,11 @@ use Doctrine\Persistence\ManagerRegistry;
  */
 class BookRepository extends ServiceEntityRepository
 {
-    public function __construct(ManagerRegistry $registry)
-    {
+    public function __construct(ManagerRegistry $registry) {
         parent::__construct($registry, Book::class);
     }
 
-    public function save(Book $entity, bool $flush = false): void
-    {
+    public function save(Book $entity, bool $flush = false): void {
         $this->getEntityManager()->persist($entity);
 
         if ($flush) {
@@ -30,13 +28,19 @@ class BookRepository extends ServiceEntityRepository
         }
     }
 
-    public function remove(Book $entity, bool $flush = false): void
-    {
+    public function remove(Book $entity, bool $flush = false): void {
         $this->getEntityManager()->remove($entity);
 
         if ($flush) {
             $this->getEntityManager()->flush();
         }
+    }
+
+    public function findAllWithPagination($page, $limit) {
+        $qb = $this->createQueryBuilder('b')
+            ->setFirstResult(($page - 1) * $limit)
+            ->setMaxResults($limit);
+        return $qb->getQuery()->getResult();
     }
 
 //    /**
