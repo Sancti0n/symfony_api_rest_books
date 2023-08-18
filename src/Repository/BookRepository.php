@@ -3,8 +3,9 @@
 namespace App\Repository;
 
 use App\Entity\Book;
-use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Doctrine\ORM\Mapping\ClassMetadata;
 use Doctrine\Persistence\ManagerRegistry;
+use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 
 /**
  * @extends ServiceEntityRepository<Book>
@@ -40,7 +41,10 @@ class BookRepository extends ServiceEntityRepository
         $qb = $this->createQueryBuilder('b')
             ->setFirstResult(($page - 1) * $limit)
             ->setMaxResults($limit);
-        return $qb->getQuery()->getResult();
+        $query = $qb->getQuery();
+        $query->setFetchMode(Book::class, "author", ClassMetadata::FETCH_EAGER);
+        $query->setFetchMode(Book::class, "serie", ClassMetadata::FETCH_EAGER);
+        return $query->getResult();
     }
 
 //    /**

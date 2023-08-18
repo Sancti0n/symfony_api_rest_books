@@ -15,10 +15,12 @@ use Symfony\Component\Validator\Validator\ValidatorInterface;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\Serializer\Normalizer\AbstractNormalizer;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 class AuthorController extends AbstractController {
 
     #[Route('/api/authors', name: 'author', methods:['GET'])]
+    #[IsGranted('ROLE_ADMIN', message: 'Vous n\'avez pas les droits suffisants pour consulter les auteurs')]
     public function getAuthorList(AuthorRepository $authorRepository, SerializerInterface $serializer): JsonResponse {
         $authorList = $authorRepository->findAll();
         $jsonAuthorList = $serializer->serialize($authorList, 'json', ['groups' => 'getAuthors']);
@@ -26,6 +28,7 @@ class AuthorController extends AbstractController {
     }
 
     #[Route('/api/authors/{id}', name: 'detailAuthor', methods: ['GET'])]
+    #[IsGranted('ROLE_ADMIN', message: 'Vous n\'avez pas les droits suffisants pour consulter un auteur')]
     public function getDetailAuthor(string $id, AuthorRepository $authorRepository, SerializerInterface $serializer): JsonResponse {
         $author = $authorRepository->find($id);
         if ($author) {
@@ -40,6 +43,7 @@ class AuthorController extends AbstractController {
         Si on veut supprimer les livres liés à l'auteur on met onDelete:"CASCADE"
     */
     #[Route('/api/authors/{id}', name: 'deleteAuthor', methods: ['DELETE'])]
+    #[IsGranted('ROLE_ADMIN', message: 'Vous n\'avez pas les droits suffisants pour supprimer un auteur')]
     public function deleteAuthor(Author $author, EntityManagerInterface $em): JsonResponse {
         $em->remove($author);
         $em->flush();
@@ -54,6 +58,7 @@ class AuthorController extends AbstractController {
         }
     */
     #[Route('/api/authors', name: 'createAuthor', methods: ['POST'])]
+    #[IsGranted('ROLE_ADMIN', message: 'Vous n\'avez pas les droits suffisants pour créer un auteur')]
     public function createAuthor(Request $request, SerializerInterface $serializer, EntityManagerInterface $em, UrlGeneratorInterface $urlGenerator, ValidatorInterface $validator, SerieRepository $serieRepository): JsonResponse {
         $author = $serializer->deserialize($request->getContent(), Author::class, 'json');
 
@@ -83,6 +88,7 @@ class AuthorController extends AbstractController {
 
     */
     #[Route('/api/authors/{id}', name:"updateAuthors", methods:['PUT'])]
+    #[IsGranted('ROLE_ADMIN', message: 'Vous n\'avez pas les droits suffisants pour mettre à jour un auteur')]
     public function updateAuthor(Request $request, SerializerInterface $serializer, Author $currentAuthor, EntityManagerInterface $em, SerieRepository $serieRepository): JsonResponse {
         $updatedAuthor = $serializer->deserialize($request->getContent(), Author::class, 'json', [AbstractNormalizer::OBJECT_TO_POPULATE => $currentAuthor]);
         $content = $request->toArray();

@@ -15,9 +15,11 @@ use Symfony\Component\Validator\Validator\ValidatorInterface;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\Serializer\Normalizer\AbstractNormalizer;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 class SerieController extends AbstractController {
     #[Route('/api/series', name: 'serie', methods: ['GET'])]
+    #[IsGranted('ROLE_ADMIN', message: 'Vous n\'avez pas les droits suffisants pour consulter des séries')]
     public function getSerieList(SerieRepository $serieRepository, SerializerInterface $serializer): JsonResponse {
         $serieList = $serieRepository->findAll();
         $jsonSerieList = $serializer->serialize($serieList, 'json', ['groups' => 'getSeries']);
@@ -25,6 +27,7 @@ class SerieController extends AbstractController {
     }
 
     #[Route('/api/series/{id}', name: 'detailSerie', methods: ['GET'])]
+    #[IsGranted('ROLE_ADMIN', message: 'Vous n\'avez pas les droits suffisants pour consulter une série')]
     public function getDetailSerie(string $id, SerieRepository $serieRepository, SerializerInterface $serializer): JsonResponse {
         $serie = $serieRepository->find($id);
         if ($serie) {
@@ -35,6 +38,7 @@ class SerieController extends AbstractController {
     }
 
     #[Route('/api/series/{id}', name: 'deleteSerie', methods: ['DELETE'])]
+    #[IsGranted('ROLE_ADMIN', message: 'Vous n\'avez pas les droits suffisants pour supprimer une série')]
     public function deleteSerie(Serie $serie, EntityManagerInterface $em): JsonResponse {
         $em->remove($serie);
         $em->flush();
@@ -50,6 +54,7 @@ class SerieController extends AbstractController {
         }
     */
     #[Route('/api/series', name: 'createSerie', methods: ['POST'])]
+    #[IsGranted('ROLE_ADMIN', message: 'Vous n\'avez pas les droits suffisants pour créer une série')]
     public function createSerie(Request $request, SerializerInterface $serializer, EntityManagerInterface $em, UrlGeneratorInterface $urlGenerator, ValidatorInterface $validator, AuthorRepository $authorRepository): JsonResponse {
         $serie = $serializer->deserialize($request->getContent(), Serie::class, 'json');
 
@@ -80,6 +85,7 @@ class SerieController extends AbstractController {
         }
     */
     #[Route('/api/series/{id}', name:"updateSeries", methods:['PUT'])]
+    #[IsGranted('ROLE_ADMIN', message: 'Vous n\'avez pas les droits suffisants pour mettre à jour une série')]
     public function updateSerie(Request $request, SerializerInterface $serializer, Serie $currentSerie, EntityManagerInterface $em, AuthorRepository $authorRepository): JsonResponse {
         $updatedSerie = $serializer->deserialize($request->getContent(), Serie::class, 'json', [AbstractNormalizer::OBJECT_TO_POPULATE => $currentSerie]);
         $content = $request->toArray();
