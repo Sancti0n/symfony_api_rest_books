@@ -42,8 +42,8 @@ class BookRepository extends ServiceEntityRepository
             ->setFirstResult(($page - 1) * $limit)
             ->setMaxResults($limit);
         $query = $qb->getQuery();
-        $query->setFetchMode(Book::class, "author", ClassMetadata::FETCH_EAGER);
-        $query->setFetchMode(Book::class, "serie", ClassMetadata::FETCH_EAGER);
+        //$query->setFetchMode(Book::class, "author", ClassMetadata::FETCH_EAGER);
+        //$query->setFetchMode(Book::class, "serie", ClassMetadata::FETCH_EAGER);
         return $query->getResult();
     }
 

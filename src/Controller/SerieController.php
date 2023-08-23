@@ -3,46 +3,72 @@
 namespace App\Controller;
 
 use App\Entity\Serie;
+use JMS\Serializer\Serializer;
 use App\Repository\SerieRepository;
 use App\Repository\AuthorRepository;
+use JMS\Serializer\SerializerInterface;
 use Doctrine\ORM\EntityManagerInterface;
+use JMS\Serializer\SerializationContext;
+use Symfony\Contracts\Cache\ItemInterface;
+//use Symfony\Component\Serializer\SerializerInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\HttpFoundation\JsonResponse;
-use Symfony\Component\Serializer\SerializerInterface;
+use Symfony\Contracts\Cache\TagAwareCacheInterface;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\Serializer\Normalizer\AbstractNormalizer;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 class SerieController extends AbstractController {
     #[Route('/api/series', name: 'serie', methods: ['GET'])]
     #[IsGranted('ROLE_ADMIN', message: 'Vous n\'avez pas les droits suffisants pour consulter des séries')]
-    public function getSerieList(SerieRepository $serieRepository, SerializerInterface $serializer): JsonResponse {
+    public function getSerieList(SerieRepository $serieRepository, SerializerInterface $serializer, 
+        Request $request, TagAwareCacheInterface $cache): JsonResponse {
+        $page = $request->get('page', 1);
+        $limit = $request->get('limit', 3);
+
+        $idCache = "getSerieList-" . $page . "-" . $limit;
+        /*
         $serieList = $serieRepository->findAll();
         $jsonSerieList = $serializer->serialize($serieList, 'json', ['groups' => 'getSeries']);
         return new JsonResponse($jsonSerieList, Response::HTTP_OK, [], true);
+        */
+        $jsonBookList = $cache->get($idCache, function (ItemInterface $item) use ($serieRepository, $page, $limit, $serializer) {
+            $item->tag("seriesCache");
+            $serieList = $serieRepository->findAllWithPagination($page, $limit);
+            $context = SerializationContext::create()->setGroups(["getSeries"]);
+            return $serializer->serialize($serieList, 'json', $context);
+        });
+
+        return new JsonResponse($jsonBookList, Response::HTTP_OK, [], true);
     }
 
     #[Route('/api/series/{id}', name: 'detailSerie', methods: ['GET'])]
     #[IsGranted('ROLE_ADMIN', message: 'Vous n\'avez pas les droits suffisants pour consulter une série')]
-    public function getDetailSerie(string $id, SerieRepository $serieRepository, SerializerInterface $serializer): JsonResponse {
-        $serie = $serieRepository->find($id);
+    public function getDetailSerie(Serie $serie, SerializerInterface $serializer): JsonResponse {
+        
+        /*$serie = $serieRepository->find($id);
         if ($serie) {
             $jsonSerie = $serializer->serialize($serie, 'json', ['groups' => 'getSeries']);
             return new JsonResponse($jsonSerie, Response::HTTP_OK, [], true);
         }
         return new JsonResponse($serie, Response::HTTP_NOT_FOUND);
+        */
+        $context = SerializationContext::create()->setGroups(["getSeries"]);
+        $jsonSerie = $serializer->serialize($serie, 'json', $context);
+        return new JsonResponse($jsonSerie, Response::HTTP_OK, [], true);
     }
 
     #[Route('/api/series/{id}', name: 'deleteSerie', methods: ['DELETE'])]
     #[IsGranted('ROLE_ADMIN', message: 'Vous n\'avez pas les droits suffisants pour supprimer une série')]
-    public function deleteSerie(Serie $serie, EntityManagerInterface $em): JsonResponse {
+    public function deleteSerie(Serie $serie, EntityManagerInterface $em, TagAwareCacheInterface $cache): JsonResponse {
         $em->remove($serie);
         $em->flush();
-
+        // On vide le cache.
+        $cache->invalidateTags(["seriesCache"]);
         return new JsonResponse($serie, Response::HTTP_NO_CONTENT);
     }
 
@@ -55,27 +81,27 @@ class SerieController extends AbstractController {
     */
     #[Route('/api/series', name: 'createSerie', methods: ['POST'])]
     #[IsGranted('ROLE_ADMIN', message: 'Vous n\'avez pas les droits suffisants pour créer une série')]
-    public function createSerie(Request $request, SerializerInterface $serializer, EntityManagerInterface $em, UrlGeneratorInterface $urlGenerator, ValidatorInterface $validator, AuthorRepository $authorRepository): JsonResponse {
+    public function createSerie(Request $request, SerializerInterface $serializer, EntityManagerInterface $em, 
+        UrlGeneratorInterface $urlGenerator, ValidatorInterface $validator,
+        TagAwareCacheInterface $cache): JsonResponse {
         $serie = $serializer->deserialize($request->getContent(), Serie::class, 'json');
-
+        
         // On vérifie les erreurs
         $errors = $validator->validate($serie);
         if ($errors->count() > 0) {
             return new JsonResponse($serializer->serialize($errors, 'json'), JsonResponse::HTTP_BAD_REQUEST, [], true);
         }
-
-        $content = $request->toArray();
-        // Récupération de l'idAuthor. S'il n'est pas défini, alors on met -1 par défaut.
-        $idAuthor = $content['idAuthor'] ?? -1 || $content['idAuthor'] == "";
-        // On cherche l'auteur qui correspond et on l'assigne au livre.
-        // Si "find" ne trouve pas l'auteur, alors null sera retourné.
-        $serie->setAuthor($authorRepository->find($idAuthor));
+        
         $em->persist($serie);
         $em->flush();
+        
+        // On vide le cache. 
+        $cache->invalidateTags(["seriesCache"]);
 
-        $jsonSerie = $serializer->serialize($serie, 'json', ['groups' => 'getSeries']);
+        $context = SerializationContext::create()->setGroups(["getSeries"]);
+        $jsonSerie = $serializer->serialize($serie, 'json', $context);
         $location = $urlGenerator->generate('detailSerie', ['id' => $serie->getId()], UrlGeneratorInterface::ABSOLUTE_URL);
-        return new JsonResponse($jsonSerie, Response::HTTP_CREATED, ["Location" => $location], true);	
+        return new JsonResponse($jsonSerie, Response::HTTP_CREATED, ["Location" => $location], true);
     }
 
     /*
@@ -86,14 +112,23 @@ class SerieController extends AbstractController {
     */
     #[Route('/api/series/{id}', name:"updateSeries", methods:['PUT'])]
     #[IsGranted('ROLE_ADMIN', message: 'Vous n\'avez pas les droits suffisants pour mettre à jour une série')]
-    public function updateSerie(Request $request, SerializerInterface $serializer, Serie $currentSerie, EntityManagerInterface $em, AuthorRepository $authorRepository): JsonResponse {
-        $updatedSerie = $serializer->deserialize($request->getContent(), Serie::class, 'json', [AbstractNormalizer::OBJECT_TO_POPULATE => $currentSerie]);
-        $content = $request->toArray();
-        $idAuthor = $content['idAuthor'] ?? -1 || $content['idAuthor'] == "";
-        $updatedSerie->setAuthor($authorRepository->find($idAuthor));
-        $em->persist($updatedSerie);
+    public function updateSerie(Request $request, SerializerInterface $serializer, Serie $currentSerie, 
+        EntityManagerInterface $em, ValidatorInterface $validator, TagAwareCacheInterface $cache): JsonResponse {
+        // On vérifie les erreurs
+        $errors = $validator->validate($currentSerie);
+        if ($errors->count() > 0) {
+            return new JsonResponse($serializer->serialize($errors, 'json'), JsonResponse::HTTP_BAD_REQUEST, [], true);
+        }
+
+        $newSerie = $serializer->deserialize($request->getContent(), Serie::class, 'json');
+        $currentSerie->setTitle($newSerie->getTitle());
+        
+        $em->persist($currentSerie);
         $em->flush();
 
-        return new JsonResponse($updatedSerie, JsonResponse::HTTP_NO_CONTENT);
+        // On vide le cache. 
+        $cache->invalidateTags(["seriesCache"]);
+
+        return new JsonResponse(null, JsonResponse::HTTP_NO_CONTENT);
     }
 }
