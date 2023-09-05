@@ -5,6 +5,7 @@ namespace App\Controller;
 use App\Entity\Book;
 use JMS\Serializer\Serializer;
 use App\Repository\BookRepository;
+use App\Service\VersioningService;
 use App\Repository\SerieRepository;
 use App\Repository\AuthorRepository;
 use JMS\Serializer\SerializerInterface;
@@ -13,7 +14,6 @@ use JMS\Serializer\SerializationContext;
 use Symfony\Contracts\Cache\ItemInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-//use Symfony\Component\Serializer\SerializerInterface;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Contracts\Cache\TagAwareCacheInterface;
@@ -29,20 +29,10 @@ class BookController extends AbstractController {
     #[IsGranted('ROLE_ADMIN', message: 'Vous n\'avez pas les droits suffisants pour consulter des livres')]
     public function getBookList(BookRepository $bookRepository, SerializerInterface $serializer, Request $request, 
         TagAwareCacheInterface $cache): JsonResponse {
-        $page = $request->get('page', 1);
+        $page = $request->get('page', 2);
         $limit = $request->get('limit', 3);
 
         $idCache = "getBookList-" . $page . "-" . $limit;
-
-        /*
-        $bookList = $cache->get($idCache, function (ItemInterface $item) use ($bookRepository, $page, $limit) {
-            $item->tag("booksCache");
-            return $bookRepository->findAllWithPagination($page, $limit);
-        });
-
-        $jsonBookList = $serializer->serialize($bookList, 'json', ['groups' => 'getBooks']);
-        return new JsonResponse($jsonBookList, Response::HTTP_OK, [], true);
-        */
 
         $jsonBookList = $cache->get($idCache, function (ItemInterface $item) use ($bookRepository, $page, $limit, $serializer) {
             $item->tag("booksCache");
@@ -56,16 +46,10 @@ class BookController extends AbstractController {
 
     #[Route('/api/books/{id}', name: 'detailBook', methods: ['GET'])]
     #[IsGranted('ROLE_ADMIN', message: 'Vous n\'avez pas les droits suffisants pour consulter un livre')]
-    public function getDetailBook(SerializerInterface $serializer, Book $book): JsonResponse {
-        /*
-        $book = $bookRepository->find($id);
-        if ($book) {
-            $jsonBook = $serializer->serialize($book, 'json', ['groups' => 'getBooks']);
-            return new JsonResponse($jsonBook, Response::HTTP_OK, [], true);
-        }
-        return new JsonResponse($id." n'est pas dans la BDD.", Response::HTTP_NOT_FOUND);
-        */
+    public function getDetailBook(SerializerInterface $serializer, Book $book, VersioningService $versioningService): JsonResponse {
+        $version = $versioningService->getVersion();
         $context = SerializationContext::create()->setGroups(['getBooks']);
+        $context->setVersion($version);
         $jsonBook = $serializer->serialize($book, 'json', $context);
         return new JsonResponse($jsonBook, Response::HTTP_OK, [], true);
     }
@@ -136,18 +120,6 @@ class BookController extends AbstractController {
     public function updateBook(Request $request, SerializerInterface $serializer, Book $currentBook, EntityManagerInterface $em, 
         AuthorRepository $authorRepository, SerieRepository $serieRepository, ValidatorInterface $validator, 
         TagAwareCacheInterface $cache): JsonResponse {
-        /*
-        $updatedBook = $serializer->deserialize($request->getContent(), Book::class, 'json', [AbstractNormalizer::OBJECT_TO_POPULATE => $currentBook]);
-        $content = $request->toArray();
-        $idAuthor = $content['idAuthor'] ?? -1 || $content['idAuthor'] == "";
-        $idSerie = $content['idSerie'] ?? -1 || $content['idSerie'] == "";
-        $updatedBook->setAuthor($authorRepository->find($idAuthor));
-        $updatedBook->setSerie($serieRepository->find($idSerie));
-        
-        $em->persist($updatedBook);
-        $em->flush();
-        return new JsonResponse(null, JsonResponse::HTTP_NO_CONTENT);
-        */
         $newBook = $serializer->deserialize($request->getContent(), Book::class, 'json');
         $currentBook->setTitle($newBook->getTitle());
         $currentBook->setCoverText($newBook->getCoverText());

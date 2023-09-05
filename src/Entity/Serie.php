@@ -5,22 +5,46 @@ namespace App\Entity;
 use Symfony\Component\Uid\Uuid;
 use Doctrine\ORM\Mapping as ORM;
 use App\Repository\SerieRepository;
-//use Symfony\Component\Serializer\Annotation\Groups;
 use JMS\Serializer\Annotation\Groups;
 use Doctrine\Common\Collections\Collection;
 use Symfony\Bridge\Doctrine\Types\UuidType;
 use Doctrine\Common\Collections\ArrayCollection;
+use Hateoas\Configuration\Annotation as Hateoas;
 
+/**
+ * @Hateoas\Relation(
+ *      "self",
+ *      href = @Hateoas\Route(
+ *          "detailSerie",
+ *          parameters = { "id" = "expr(object.getId())" }
+ *      ),
+ *      exclusion = @Hateoas\Exclusion(groups="getSeries")
+ * )
+ *
+ * @Hateoas\Relation(
+ *      "delete",
+ *      href = @Hateoas\Route(
+ *          "deleteSerie",
+ *          parameters = { "id" = "expr(object.getId())" },
+ *      ),
+ *      exclusion = @Hateoas\Exclusion(groups="getSeries", excludeIf = "expr(not is_granted('ROLE_ADMIN'))"),
+ * )
+ *
+ * @Hateoas\Relation(
+ *      "update",
+ *      href = @Hateoas\Route(
+ *          "updateSerie",
+ *          parameters = { "id" = "expr(object.getId())" },
+ *      ),
+ *      exclusion = @Hateoas\Exclusion(groups="getSeries", excludeIf = "expr(not is_granted('ROLE_ADMIN'))"),
+ * )
+ */
 #[ORM\Entity(repositoryClass: SerieRepository::class)]
 class Serie {
     #[ORM\Id]
     #[ORM\GeneratedValue('CUSTOM')]
-    //#[ORM\GeneratedValue]
     #[ORM\Column(type: UuidType::NAME, unique: true)]
-    //#[ORM\Column(type: 'uuid', unique: true)]
-    //#[ORM\Column]
     #[ORM\CustomIdGenerator('doctrine.uuid_generator')]
-    //private ?int $id = null;
     #[Groups(["getBooks","getAuthors", "getSeries"])]
     private ?Uuid $id = null;
 
@@ -33,7 +57,6 @@ class Serie {
     private ?Author $Author = null;
 
     #[ORM\OneToMany(mappedBy: 'serie', targetEntity: Book::class)]
-    //#[Groups(["getAuthors", "getSeries"])]
     private Collection $Book;
 
     public function __construct() {
@@ -41,7 +64,6 @@ class Serie {
     }
 
     public function getId(): ?Uuid {
-    //public function getId(): ?int {
         return $this->id;
     }
 

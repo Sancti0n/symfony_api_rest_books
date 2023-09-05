@@ -5,8 +5,8 @@ namespace App\Entity;
 use Doctrine\DBAL\Types\Types;
 use Symfony\Component\Uid\Uuid;
 use Doctrine\ORM\Mapping as ORM;
-//use Symfony\Component\Serializer\Annotation\Groups;
 use App\Repository\BookRepository;
+use JMS\Serializer\Annotation\Since;
 use JMS\Serializer\Annotation\Groups;
 use Symfony\Bridge\Doctrine\Types\UuidType;
 use Hateoas\Configuration\Annotation as Hateoas;
@@ -44,12 +44,8 @@ use Symfony\Component\Validator\Constraints as Assert;
 class Book {
     #[ORM\Id]
     #[ORM\GeneratedValue('CUSTOM')]
-    //#[ORM\GeneratedValue]
     #[ORM\Column(type: UuidType::NAME, unique: true)]
-    //#[ORM\Column(type: 'uuid', unique: true)]
-    //#[ORM\Column]
     #[ORM\CustomIdGenerator('doctrine.uuid_generator')]
-
     #[Groups(["getBooks", "getAuthors", "getSeries"])]
     private ?Uuid $id = null;
 
@@ -68,9 +64,7 @@ class Book {
     private ?string $isbn = null;
 
     #[ORM\ManyToOne(inversedBy: 'books')]
-    //#[ORM\JoinColumn(onDelete:"CASCADE")]
     #[ORM\JoinColumn(onDelete:"SET NULL")]
-    //#[Groups(["getBooks", "getAuthors", "getSeries"])]
     #[Groups(["getBooks", "getSeries"])]
     private ?Author $author = null;
 
@@ -79,7 +73,11 @@ class Book {
     
     private ?Serie $serie = null;
 
-    //public function getId(): ?int
+    #[ORM\Column(type: Types::TEXT, nullable: true)]
+    #[Groups(["getBooks"])]
+    #[Since("3.0")]
+    private ?string $comment = null;
+
     public function getId(): ?Uuid {
         return $this->id;
     }
@@ -128,6 +126,18 @@ class Book {
 
     public function setSerie(?Serie $serie): static {
         $this->serie = $serie;
+
+        return $this;
+    }
+
+    public function getComment(): ?string
+    {
+        return $this->comment;
+    }
+
+    public function setComment(?string $comment): static
+    {
+        $this->comment = $comment;
 
         return $this;
     }

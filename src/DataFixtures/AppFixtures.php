@@ -45,6 +45,7 @@ class AppFixtures extends Fixture {
             $livre = new Book();
             $livre->setTitle($faker->sentence($nbWords = 6, $variableNbWords = true));
             $livre->setCoverText('Quatrième de couverture numéro : ' . $i);
+            $livre->setComment("Commentaire du bibliothécaire " . $i);
             $livre->setIsbn(strval(random_int(9780000000000, 9790000000000)));
 
             for ($j=0;$j<count($listAuthor);$j++) {

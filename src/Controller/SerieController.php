@@ -10,7 +10,6 @@ use JMS\Serializer\SerializerInterface;
 use Doctrine\ORM\EntityManagerInterface;
 use JMS\Serializer\SerializationContext;
 use Symfony\Contracts\Cache\ItemInterface;
-//use Symfony\Component\Serializer\SerializerInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
@@ -31,11 +30,7 @@ class SerieController extends AbstractController {
         $limit = $request->get('limit', 3);
 
         $idCache = "getSerieList-" . $page . "-" . $limit;
-        /*
-        $serieList = $serieRepository->findAll();
-        $jsonSerieList = $serializer->serialize($serieList, 'json', ['groups' => 'getSeries']);
-        return new JsonResponse($jsonSerieList, Response::HTTP_OK, [], true);
-        */
+
         $jsonBookList = $cache->get($idCache, function (ItemInterface $item) use ($serieRepository, $page, $limit, $serializer) {
             $item->tag("seriesCache");
             $serieList = $serieRepository->findAllWithPagination($page, $limit);
@@ -49,14 +44,6 @@ class SerieController extends AbstractController {
     #[Route('/api/series/{id}', name: 'detailSerie', methods: ['GET'])]
     #[IsGranted('ROLE_ADMIN', message: 'Vous n\'avez pas les droits suffisants pour consulter une série')]
     public function getDetailSerie(Serie $serie, SerializerInterface $serializer): JsonResponse {
-        
-        /*$serie = $serieRepository->find($id);
-        if ($serie) {
-            $jsonSerie = $serializer->serialize($serie, 'json', ['groups' => 'getSeries']);
-            return new JsonResponse($jsonSerie, Response::HTTP_OK, [], true);
-        }
-        return new JsonResponse($serie, Response::HTTP_NOT_FOUND);
-        */
         $context = SerializationContext::create()->setGroups(["getSeries"]);
         $jsonSerie = $serializer->serialize($serie, 'json', $context);
         return new JsonResponse($jsonSerie, Response::HTTP_OK, [], true);
@@ -110,7 +97,7 @@ class SerieController extends AbstractController {
             "idAuthor": "01898d66-490c-7219-8edc-fcc1d5e5e90b"
         }
     */
-    #[Route('/api/series/{id}', name:"updateSeries", methods:['PUT'])]
+    #[Route('/api/series/{id}', name:"updateSerie", methods:['PUT'])]
     #[IsGranted('ROLE_ADMIN', message: 'Vous n\'avez pas les droits suffisants pour mettre à jour une série')]
     public function updateSerie(Request $request, SerializerInterface $serializer, Serie $currentSerie, 
         EntityManagerInterface $em, ValidatorInterface $validator, TagAwareCacheInterface $cache): JsonResponse {
