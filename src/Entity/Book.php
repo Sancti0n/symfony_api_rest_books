@@ -75,7 +75,7 @@ class Book {
 
     #[ORM\Column(type: Types::TEXT, nullable: true)]
     #[Groups(["getBooks"])]
-    #[Since("3.0")]
+    #[Since("1.0")]
     private ?string $comment = null;
 
     public function getId(): ?Uuid {
